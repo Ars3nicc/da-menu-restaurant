@@ -8,15 +8,16 @@ import {
   update,
   remove,
 } from "firebase/database";
+import MenuItemView from "../MenuItemView";
 import { database } from "../../firebaseConfig";
-import './index.css'; // Assuming you have the Tailwind CSS included
+import "./index.css"; // Assuming you have the Tailwind CSS included
 
 const MenuItemForm = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [category, setCategory] = useState("");
   const [name, setName] = useState("");
   const [options, setOptions] = useState("");
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(0); // Initialize price as 0
   const [cost, setCost] = useState("");
   const [stock, setStock] = useState("");
   const [editId, setEditId] = useState(null);
@@ -56,7 +57,7 @@ const MenuItemForm = () => {
     setCategory("");
     setName("");
     setOptions("");
-    setPrice("");
+    setPrice(0); // Reset price to 0
     setCost("");
     setStock("");
   };
@@ -76,97 +77,116 @@ const MenuItemForm = () => {
     remove(itemRef);
   };
 
+  useEffect(() => {
+    let additionalCost = 0;
+    switch (options) {
+      case "Medium":
+        additionalCost = 5;
+        break;
+      case "Large":
+        additionalCost = 10;
+        break;
+      case "Extra Large":
+        additionalCost = 15;
+        break;
+      default:
+        break;
+    }
+    setPrice(Number(cost) + additionalCost); // Update price when cost or options change
+  }, [cost, options]);
+
   return (
-    <div className="container mx-auto p-6 flex space-x-6">
-      <div className="w-1/3 bg-white p-6 rounded shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Da' Menu Restaurant</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Order Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Other options (comma separated)"
-            value={options}
-            onChange={(e) => setOptions(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-          />
-          <input
-            type="number"
-            placeholder="Price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Cost"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Amount of Stock"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            className="input-field border-2 border-blue-400 rounded p-2 w-full"
-            required
-          />
-          <button
-            type="submit"
-            className="btn bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200 w-full"
-          >
-            {editId ? "Update Order" : "Submit Order"}
-          </button>
-        </form>
-      </div>
-      <div className="w-2/3">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Your Orders</h2>
-        <p className="mb-4 text-gray-600">Please review your selections before checkout</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {menuItems.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded shadow-md">
-              <h3 className="text-xl font-bold">{item.name}</h3>
-              <p className="text-gray-600">{item.category}</p>
-              <p className="text-gray-600">{item.options}</p>
-              <p className="text-gray-600">Cost: {item.cost} PHP</p>
-              <p className="text-gray-600">Amount in Stock: {item.stock}</p>
-              <p className="font-bold text-gray-800">Total: {item.price} PHP</p>
-              <div className="flex space-x-2 mt-4">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="btn-edit bg-yellow-400 text-white px-3 py-1 rounded shadow-md hover:bg-yellow-500 transition duration-200"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="btn-delete bg-red-500 text-white px-3 py-1 rounded shadow-md hover:bg-red-600 transition duration-200"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+    <main className="container mx-auto text-center p-4">
+      <header className=" float-end text-end leading-5">
+        <h2 className="text-5xl font-bold text-gray-800">Your Orders</h2>
+        <p className="text-gray-600">
+          Please review your selections before checkout
+        </p>
+      </header>
+      <div className="container mx-auto p-6 md:flex lg:flex space-x-6">
+        <div className="w-full md:w-96 bg-white p-6 rounded shadow-lg">
+          <h1 className="text-left text-4xl font-bold mb-6 text-gray-800">
+            Da'Menu <br /> Restaurant
+          </h1>
+          <form onSubmit={handleSubmit} className=" space-y-4">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="input-field border-2 border-gray-300 rounded p-2 w-full"
+              required
+            >
+              <option value="">Select a category</option>
+              <option value="Burgers">Burgers</option>
+              <option value="Sides">Sides</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Desserts">Desserts</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Order Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="input-field border-2 border-gray-300 rounded p-2 w-full"
+              required
+            />
+
+            <select
+              value={options}
+              onChange={(e) => {
+                setOptions(e.target.value);
+                let additionalCost = 0;
+                switch (e.target.value) {
+                  case "Medium":
+                    additionalCost = 5;
+                    break;
+                  case "Large":
+                    additionalCost = 10;
+                    break;
+                  case "Extra Large":
+                    additionalCost = 15;
+                    break;
+                  default:
+                    break;
+                }
+                setCost(price + additionalCost);
+              }}
+              className="input-field border-2 border-gray-300 rounded p-2 w-full"
+            >
+              <option value="">Select a size</option>
+              <option value="Regular">Regular</option>
+              <option value="Medium">Medium</option>
+              <option value="Large">Large</option>
+              <option value="Extra Large">Extra Large</option>
+            </select>
+            <input
+              type="number"
+              placeholder="Number of Orders"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              className="input-field border-2 border-gray-300 rounded p-2 w-full"
+              required
+            />
+            <p className="text-end text-2xl p-2 w-full">
+              Total Price: <span className="font-bold">{price} PHP</span>
+            </p>
+            <button
+              type="submit"
+              className="btn bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200 w-full"
+            >
+              {editId ? "Update Order" : "Submit Order"}
+            </button>
+          </form>
         </div>
+
+        <section>
+          <MenuItemView
+            menuItems={menuItems}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 
